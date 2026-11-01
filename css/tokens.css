@@ -1,0 +1,60 @@
+/* Orden de las capas para toda la hoja: cada fichero solo rellena la suya. */
+@layer tokens, base, layout, componentes, utilidades;
+
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+
+    /* Triádica: azul (la pantalla y la página), coral (los marcianos y el error) y verde (la nave). */
+    --azul: 255;
+    --coral: 25;
+    --verde: 150;
+
+    --mesa: light-dark(hsl(var(--azul) 25% 92%), hsl(var(--azul) 28% 8%));
+    --mueble: light-dark(hsl(var(--azul) 30% 97%), hsl(var(--azul) 24% 13%));
+    --tinta: light-dark(hsl(var(--azul) 35% 12%), hsl(var(--azul) 25% 92%));
+    --tinta-suave: light-dark(hsl(var(--azul) 18% 33%), hsl(var(--azul) 15% 72%));
+    --borde: light-dark(hsl(var(--azul) 15% 45%), hsl(var(--azul) 12% 52%));
+    --acento: light-dark(hsl(var(--coral) 80% 38%), hsl(var(--coral) 85% 68%));
+    --sobre-acento: light-dark(hsl(var(--azul) 30% 98%), hsl(var(--azul) 35% 9%));
+
+    /* La pantalla es oscura en los dos modos, como el tubo de una recreativa */
+    --pantalla: hsl(var(--azul) 45% 7%);
+    --pantalla-tenue: hsl(var(--azul) 25% 30%);
+    --pantalla-texto: hsl(var(--azul) 30% 90%);
+    --jugador: hsl(var(--verde) 65% 55%);
+    --invasor: hsl(var(--coral) 90% 64%);
+    --ovni: hsl(var(--azul) 85% 76%);
+
+    --fuente-pantalla: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --fuente-interfaz: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+
+    --razon: 1.25;
+    --paso--1: calc(1rem / var(--razon));
+    --paso-0: 1rem;
+    --paso-1: calc(var(--paso-0) * var(--razon));
+    --paso-2: calc(var(--paso-1) * var(--razon));
+    --paso-3: calc(var(--paso-2) * var(--razon));
+    --paso-4: calc(var(--paso-3) * var(--razon));
+    --paso-5: calc(var(--paso-4) * var(--razon));
+
+    --peso-normal: 400;
+    --peso-medio: 600;
+    --peso-fuerte: 700;
+    --interlineado: 1.5;
+
+    --espacio-1: 0.25rem;
+    --espacio-2: 0.5rem;
+    --espacio-3: 1rem;
+    --espacio-4: 1.5rem;
+    --espacio-5: clamp(1.5rem, 1rem + 2.5vw, 3rem);
+    --espacio-6: clamp(2rem, 1rem + 5vw, 5rem);
+    --ancho-maximo: 72rem;
+
+    --radio: 0.25rem;
+    --anillo: 3px;
+    --control: 3rem;
+    --duracion: 150ms;
+    --curva: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
