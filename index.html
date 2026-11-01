@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marcianitos · Recreativa</title>
+  <meta name="description" content="Marcianitos: un matamarcianos en canvas. Mueve la nave, dispara a la formación y aguanta todos los niveles que puedas.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#e4e8f0" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f131c" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/componentes.css">
+
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <!-- Arranca en error: si el módulo no llega a ejecutarse (sin JavaScript o con file://) queda a la vista el aviso. -->
+  <div class="app" data-estado="error">
+    <header class="cabecera">
+      <h1 class="cabecera__titulo">Marcianitos</h1>
+      <p class="cabecera__lema">Una nave, una formación que baja y tres vidas. Dispara antes de que lleguen al suelo.</p>
+    </header>
+
+    <main class="principal">
+      <section class="mueble" aria-label="Juego">
+        <div class="pantalla">
+          <canvas class="pantalla__lienzo" data-vista="lienzo" width="300" height="400" tabindex="0"
+                  role="img" aria-label="Pantalla del juego. Los marcadores están a su lado."></canvas>
+        </div>
+
+        <div class="tactil" aria-label="Mando táctil">
+          <button class="tactil__boton" type="button" data-tactil="izquierda" aria-label="Mover a la izquierda">◀</button>
+          <button class="tactil__boton tactil__boton--disparo" type="button" data-tactil="disparo">Disparar</button>
+          <button class="tactil__boton" type="button" data-tactil="derecha" aria-label="Mover a la derecha">▶</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Marcadores y mandos">
+        <h2 class="visualmente-oculto">Marcadores</h2>
+        <dl class="marcadores">
+          <div class="marcador">
+            <dt class="marcador__etiqueta">puntos</dt>
+            <dd class="marcador__valor marcador__valor--grande" data-vista="puntos">0</dd>
+          </div>
+          <div class="marcador">
+            <dt class="marcador__etiqueta">récord</dt>
+            <dd class="marcador__valor" data-vista="record">0</dd>
+          </div>
+          <div class="marcador">
+            <dt class="marcador__etiqueta">nivel</dt>
+            <dd class="marcador__valor" data-vista="nivel">—</dd>
+          </div>
+          <div class="marcador">
+            <dt class="marcador__etiqueta">vidas</dt>
+            <dd class="marcador__valor" data-vista="vidas">—</dd>
+          </div>
+        </dl>
+
+        <p class="aviso" data-vista="mensaje" role="alert">
+          No se ha podido iniciar el juego. Necesita JavaScript y, si has abierto index.html directamente,
+          servirse desde un servidor local.
+        </p>
+        <p class="estado" data-vista="estado"></p>
+
+        <div class="mando">
+          <button class="boton boton--principal" type="button" data-accion="iniciar" data-vista="iniciar" aria-keyshortcuts="Enter">Iniciar</button>
+          <button class="boton" type="button" data-accion="pausar" data-vista="pausar" aria-keyshortcuts="P" disabled>Pausar</button>
+          <button class="boton" type="button" data-accion="terminar" data-vista="terminar" aria-keyshortcuts="Escape" disabled>Terminar</button>
+        </div>
+
+        <div class="ajuste">
+          <label class="ajuste__etiqueta" for="dificultad">Dificultad</label>
+          <select class="ajuste__control" id="dificultad" data-vista="dificultad"></select>
+        </div>
+
+        <button class="enlace" type="button" data-accion="ayuda">Cómo se juega</button>
+      </section>
+
+      <p class="visualmente-oculto" data-vista="anuncio" aria-live="polite"></p>
+    </main>
+
+    <footer class="pie">
+      <p>Grupo Dinamarca · IPO 2026/27</p>
+    </footer>
+
+    <dialog class="ayuda" data-vista="ayuda" aria-labelledby="ayuda-titulo">
+      <form class="ayuda__contenido" method="dialog">
+        <h2 class="ayuda__titulo" id="ayuda-titulo">Cómo se juega</h2>
+        <p>Destruye todos los marcianos de la formación antes de que bajen hasta tu línea. Cada vez que vacías la pantalla, empieza un nivel más rápido y con más filas.</p>
+
+        <h3 class="ayuda__subtitulo">Mandos</h3>
+        <dl class="teclas">
+          <dt><kbd>←</kbd> <kbd>→</kbd> o <kbd>A</kbd> <kbd>D</kbd></dt>
+          <dd>Mover la nave</dd>
+          <dt><kbd>Espacio</kbd></dt>
+          <dd>Disparar (se puede mantener pulsado)</dd>
+          <dt><kbd>Intro</kbd></dt>
+          <dd>Empezar una partida</dd>
+          <dt><kbd>P</kbd></dt>
+          <dd>Pausar y reanudar</dd>
+          <dt><kbd>Esc</kbd></dt>
+          <dd>Terminar la partida</dd>
+        </dl>
+        <p>En una pantalla táctil aparecen tres botones bajo el juego.</p>
+
+        <h3 class="ayuda__subtitulo">Puntos</h3>
+        <ul class="ayuda__lista">
+          <li>Marciano de la fila superior: 30</li>
+          <li>Marcianos de las filas centrales: 20</li>
+          <li>Marcianos de la fila inferior: 10</li>
+          <li>Nave nodriza que cruza arriba: 50, 100, 150 o 300</li>
+        </ul>
+
+        <h3 class="ayuda__subtitulo">Reglas</h3>
+        <ul class="ayuda__lista">
+          <li>Las bombas te quitan una vida; tras el impacto eres invulnerable un par de segundos.</li>
+          <li>La partida acaba si te quedas sin vidas o si un marciano toca tu línea.</li>
+          <li>La dificultad cambia las vidas, la velocidad y las bombas, y solo se puede ajustar antes de empezar. El récord se guarda por dificultad.</li>
+        </ul>
+
+        <button class="boton boton--principal" type="submit">Entendido</button>
+      </form>
+    </dialog>
+  </div>
+</body>
+</html>

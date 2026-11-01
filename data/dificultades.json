@@ -1,0 +1,5 @@
+[
+  { "id": "facil", "nombre": "Fácil", "vidas": 5, "paso": 0.7, "bombas": 1.6, "bombasMax": 2, "disparosMax": 4 },
+  { "id": "normal", "nombre": "Normal", "vidas": 3, "paso": 0.55, "bombas": 1.1, "bombasMax": 3, "disparosMax": 3 },
+  { "id": "dificil", "nombre": "Difícil", "vidas": 2, "paso": 0.42, "bombas": 0.7, "bombasMax": 5, "disparosMax": 2 }
+]

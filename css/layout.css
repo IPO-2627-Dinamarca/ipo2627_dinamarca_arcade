@@ -1,0 +1,118 @@
+@layer layout {
+  .app {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "cabecera"
+      "principal"
+      "pie";
+    align-content: start;
+    gap: var(--espacio-4);
+    min-block-size: 100dvh;
+    padding-block: var(--espacio-4);
+    padding-inline: max(var(--espacio-3), (100% - var(--ancho-maximo)) / 2);
+  }
+
+  .cabecera { grid-area: cabecera; }
+  .principal { grid-area: principal; }
+  .pie { grid-area: pie; align-self: end; }
+
+  /* Móvil: la pantalla arriba y los mandos debajo; el mueble se ajusta al alto de la ventana */
+  .principal {
+    display: grid;
+    gap: var(--espacio-4);
+    align-content: start;
+  }
+
+  .mueble {
+    display: grid;
+    gap: var(--espacio-3);
+    justify-items: center;
+  }
+
+  .pantalla {
+    inline-size: min(100%, calc((100dvh - 12rem) * 3 / 4));
+    min-inline-size: 15rem;
+  }
+
+  .pantalla__lienzo {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 3 / 4;
+  }
+
+  .tactil {
+    display: none;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: var(--espacio-2);
+    inline-size: min(100%, 24rem);
+  }
+
+  @media (pointer: coarse) {
+    .tactil {
+      display: grid;
+    }
+  }
+
+  .marcadores {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--espacio-3);
+  }
+
+  .mando {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--espacio-2);
+  }
+
+  .panel {
+    display: grid;
+    gap: var(--espacio-3);
+    align-content: start;
+  }
+
+  .ajuste {
+    display: flex;
+    align-items: center;
+    gap: var(--espacio-3);
+  }
+
+  .ayuda__contenido {
+    display: grid;
+    gap: var(--espacio-3);
+  }
+
+  .teclas {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--espacio-1) var(--espacio-3);
+  }
+
+  /* Escritorio: pantalla a la izquierda, marcadores y mandos a la derecha */
+  @media (width >= 56rem) {
+    .principal {
+      grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+      column-gap: var(--espacio-6);
+      align-items: start;
+    }
+
+    .mueble {
+      justify-items: start;
+    }
+
+    .marcadores {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: var(--espacio-3);
+    }
+
+    .marcador:first-child {
+      grid-column: 1 / -1;
+    }
+
+    .mando {
+      grid-template-columns: 1fr;
+    }
+  }
+}

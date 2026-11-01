@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+# Fuerza a GitHub Linguist a contar HTML y CSS como lenguajes del proyecto
+*.html linguist-detectable=true linguist-documentation=false
+*.css  linguist-detectable=true linguist-documentation=false
+*.js   linguist-detectable=true
+*.json linguist-detectable=false linguist-generated=false

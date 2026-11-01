@@ -1,0 +1,231 @@
+@layer componentes {
+  .cabecera__titulo {
+    font-size: clamp(var(--paso-3), 1.2rem + 3vw, var(--paso-5));
+    font-weight: var(--peso-fuerte);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .cabecera__lema {
+    max-inline-size: 44ch;
+    margin-block-start: var(--espacio-2);
+    color: var(--tinta-suave);
+    text-wrap: pretty;
+  }
+
+  .pie {
+    font-size: var(--paso--1);
+    color: var(--tinta-suave);
+  }
+
+  /* Pantalla: el único elemento oscuro de la página en los dos modos */
+
+  .pantalla {
+    padding: var(--espacio-2);
+    background-color: var(--mueble);
+    border: 1px solid var(--borde);
+    border-radius: calc(var(--radio) * 3);
+  }
+
+  .pantalla__lienzo {
+    background-color: var(--pantalla);
+    border-radius: var(--radio);
+    outline-offset: 4px;
+    image-rendering: pixelated;
+    touch-action: none;
+  }
+
+  /* Marcadores */
+
+  .marcador__etiqueta {
+    font-size: var(--paso--1);
+    color: var(--tinta-suave);
+  }
+
+  .marcador__valor {
+    font-family: var(--fuente-pantalla);
+    font-size: var(--paso-2);
+    font-weight: var(--peso-fuerte);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .marcador__valor--grande {
+    font-size: var(--paso-4);
+  }
+
+  /* Mensajes: el aviso estático solo se ve si el módulo no arranca; el estado reserva su línea */
+
+  .aviso {
+    padding: var(--espacio-2) var(--espacio-3);
+    color: var(--acento);
+    border-inline-start: 3px solid var(--acento);
+  }
+
+  .estado {
+    min-block-size: calc(2 * 1lh);
+    color: var(--tinta-suave);
+  }
+
+  .app:not([data-estado="error"]):not([data-estado="cargando"]) .aviso,
+  .app:is([data-estado="error"], [data-estado="cargando"]) :is(.mueble, .marcadores, .estado, .mando, .ajuste, .enlace) {
+    display: none;
+  }
+
+  .app[data-estado="cargando"] .aviso {
+    color: var(--tinta-suave);
+    border-color: var(--borde);
+  }
+
+  /* Botones */
+
+  .boton {
+    min-block-size: var(--control);
+    padding-inline: var(--espacio-3);
+    font-weight: var(--peso-medio);
+    background-color: transparent;
+    border: 2px solid var(--tinta);
+    border-radius: var(--radio);
+    cursor: pointer;
+    transition: background-color var(--duracion) var(--curva), color var(--duracion) var(--curva);
+
+    &:active:not(:disabled) {
+      translate: 0 1px;
+    }
+
+    &:disabled {
+      color: var(--tinta-suave);
+      border-color: var(--borde);
+      border-style: dashed;
+      cursor: not-allowed;
+    }
+  }
+
+  .boton--principal {
+    color: var(--sobre-acento);
+    background-color: var(--tinta);
+
+    &:disabled {
+      background-color: transparent;
+    }
+  }
+
+  @media (hover: hover) {
+    .boton:hover:not(:disabled) {
+      color: var(--sobre-acento);
+      background-color: var(--acento);
+      border-color: var(--acento);
+    }
+  }
+
+  .enlace {
+    justify-self: start;
+    padding: var(--espacio-1) 0;
+    background: none;
+    border: 0;
+    color: var(--tinta);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+  }
+
+  /* Ajuste de dificultad */
+
+  .ajuste__control {
+    min-block-size: var(--control);
+    padding-inline: var(--espacio-2);
+    background-color: var(--mueble);
+    border: 2px solid var(--tinta);
+    border-radius: var(--radio);
+
+    &:disabled {
+      color: var(--tinta-suave);
+      border-color: var(--borde);
+      border-style: dashed;
+    }
+  }
+
+  /* Mando táctil */
+
+  .tactil__boton {
+    min-block-size: 4rem;
+    font-size: var(--paso-1);
+    font-weight: var(--peso-fuerte);
+    background-color: var(--mueble);
+    border: 2px solid var(--tinta);
+    border-radius: calc(var(--radio) * 3);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+
+    &:active {
+      color: var(--sobre-acento);
+      background-color: var(--tinta);
+    }
+  }
+
+  /* Ayuda */
+
+  .ayuda {
+    inline-size: min(100% - 2rem, 34rem);
+    max-block-size: calc(100dvh - 2rem);
+    padding: var(--espacio-4);
+    color: var(--tinta);
+    background-color: var(--mueble);
+    border: 1px solid var(--borde);
+    border-radius: calc(var(--radio) * 3);
+    overscroll-behavior: contain;
+
+    &::backdrop {
+      background-color: hsl(var(--azul) 40% 5% / 0.6);
+    }
+  }
+
+  .ayuda__titulo {
+    font-size: var(--paso-3);
+    line-height: 1.1;
+  }
+
+  .ayuda__subtitulo {
+    font-size: var(--paso-0);
+    color: var(--tinta-suave);
+  }
+
+  .ayuda__lista {
+    padding-inline-start: 1.25rem;
+  }
+
+  .teclas dt {
+    white-space: nowrap;
+  }
+
+  /* El estado del juego se acompaña de un cambio sutil en la pantalla */
+  @media (prefers-reduced-motion: no-preference) {
+    .pantalla {
+      transition: border-color var(--duracion) var(--curva);
+    }
+
+    .app[data-estado="jugando"] .pantalla {
+      border-color: var(--tinta);
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    .cabecera__lema,
+    .pie,
+    .marcador__etiqueta,
+    .estado {
+      color: var(--tinta);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .pantalla {
+      border-width: 2px;
+    }
+
+    .boton--principal {
+      border-color: ButtonText;
+    }
+  }
+}
