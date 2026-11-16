@@ -33,7 +33,9 @@ export class Controlador {
     vista.alAccion((accion) => this.#accion(accion));
     vista.alCambiarDificultad((id) => this.#cambiarDificultad(id));
     vista.alMandoTactil((tecla, activa) => (this.#entrada[tecla] = activa));
-    vista.alCerrarAyuda(() => vista.mostrarEstado('En pausa. Pulsa Reanudar para seguir.'));
+    vista.alCerrarAyuda(() => {
+      if (this.#partida.estado === 'pausado') vista.mostrarEstado('En pausa. Pulsa Reanudar para seguir.');
+    });
 
     document.addEventListener('keydown', (e) => this.#teclaAbajo(e));
     document.addEventListener('keyup', (e) => this.#teclaArriba(e));
