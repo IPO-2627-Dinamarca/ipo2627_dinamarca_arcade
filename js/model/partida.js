@@ -1,10 +1,23 @@
 import { MUNDO, TAMANO, solapan, crearNave, crearInvasor } from './entidades.js';
 
+export const ESTADO = Object.freeze({ PARADO: 'parado', JUGANDO: 'jugando', PAUSADO: 'pausado', FIN: 'fin' });
+export const MOTIVO = Object.freeze({ ABANDONO: 'abandono', INVASION: 'invasion', DERROTA: 'derrota' });
+
 const COLUMNAS = 8;
+const FILAS_INICIALES = 3;
+const FILAS_MAXIMAS = 5;
 const SEPARACION = { x: 30, y: 24 };
 const MARGEN = 14;
 const PASO = 4;
 const BAJADA = 10;
+const Y_INICIAL = 52;
+const DESCENSO_POR_NIVEL = 8;
+const NIVELES_CON_DESCENSO = 4;
+const ESPERA_NIVEL = 1.8;
+const INVULNERABILIDAD = 2;
+const PUNTERIA = 0.35;
+const Y_OVNI = 26;
+const INVASORES_MINIMOS_OVNI = 6;
 const VELOCIDAD_NAVE = 150;
 const VELOCIDAD_DISPARO = 260;
 const VELOCIDAD_BOMBA = 100;
@@ -15,7 +28,7 @@ const PREMIOS_OVNI = [50, 100, 150, 300];
 export class Partida {
   constructor(dificultad) {
     this.dificultad = dificultad;
-    this.estado = 'parado';
+    this.estado = ESTADO.PARADO;
     this.motivo = null;
     this.puntos = 0;
     this.vidas = 0;
@@ -29,11 +42,21 @@ export class Partida {
     this.cuadro = 0;
     this.espera = 0;
     this.invulnerable = 0;
+    this.direccion = 1;
+    this.enfriamiento = 0;
+    this.totalInvasores = 0;
+    this.relojPaso = 0;
+    this.relojBomba = 0;
+    this.relojOvni = 0;
+  }
+
+  get enCurso() {
+    return this.estado === ESTADO.JUGANDO || this.estado === ESTADO.PAUSADO;
   }
 
   empezar() {
-    if (this.estado === 'jugando' || this.estado === 'pausado') return;
-    this.estado = 'jugando';
+    if (this.enCurso) return;
+    this.estado = ESTADO.JUGANDO;
     this.motivo = null;
     this.puntos = 0;
     this.vidas = this.dificultad.vidas;
@@ -45,16 +68,16 @@ export class Partida {
   }
 
   alternarPausa() {
-    if (this.estado === 'jugando') this.estado = 'pausado';
-    else if (this.estado === 'pausado') this.estado = 'jugando';
+    if (this.estado === ESTADO.JUGANDO) this.estado = ESTADO.PAUSADO;
+    else if (this.estado === ESTADO.PAUSADO) this.estado = ESTADO.JUGANDO;
   }
 
   terminar() {
-    if (this.estado === 'jugando' || this.estado === 'pausado') this.#acabar('abandono');
+    if (this.enCurso) this.#acabar(MOTIVO.ABANDONO);
   }
 
   actualizar(dt, entrada) {
-    if (this.estado !== 'jugando') return;
+    if (this.estado !== ESTADO.JUGANDO) return;
 
     this.#moverNave(dt, entrada);
     this.invulnerable = Math.max(0, this.invulnerable - dt);
@@ -70,10 +93,10 @@ export class Partida {
     this.#moverProyectiles(dt);
     this.#moverFormacion(dt);
     this.#moverOvni(dt);
-    if (this.estado !== 'jugando') return;
+    if (this.estado !== ESTADO.JUGANDO) return;
     this.#resolverColisiones();
 
-    if (this.estado === 'jugando' && this.invasores.length === 0) this.#siguienteNivel();
+    if (this.estado === ESTADO.JUGANDO && this.invasores.length === 0) this.#siguienteNivel();
   }
 
   #siguienteNivel() {
@@ -83,13 +106,13 @@ export class Partida {
     this.ovni = null;
     this.direccion = 1;
     this.cuadro = 0;
-    this.espera = 1.8;
+    this.espera = ESPERA_NIVEL;
     this.enfriamiento = 0;
     this.relojOvni = 14 + Math.random() * 10;
 
-    const filas = Math.min(3 + Math.floor((this.nivel - 1) / 2), 5);
+    const filas = Math.min(FILAS_INICIALES + Math.floor((this.nivel - 1) / 2), FILAS_MAXIMAS);
     const x0 = (MUNDO.ancho - (COLUMNAS - 1) * SEPARACION.x) / 2;
-    const y0 = 52 + Math.min(this.nivel - 1, 4) * 8;
+    const y0 = Y_INICIAL + Math.min(this.nivel - 1, NIVELES_CON_DESCENSO) * DESCENSO_POR_NIVEL;
     this.invasores = [];
     for (let fila = 0; fila < filas; fila++) {
       const tipo = fila === 0 ? 0 : fila === filas - 1 ? 2 : 1;
@@ -103,7 +126,7 @@ export class Partida {
   }
 
   #acabar(motivo) {
-    this.estado = 'fin';
+    this.estado = ESTADO.FIN;
     this.motivo = motivo;
   }
 
@@ -146,7 +169,7 @@ export class Partida {
     }
     const candidatos = [...masBajos.values()];
     let origen = candidatos[Math.floor(Math.random() * candidatos.length)];
-    if (Math.random() < 0.35) {
+    if (Math.random() < PUNTERIA) {
       origen = candidatos.reduce((a, b) => (Math.abs(b.x - this.nave.x) < Math.abs(a.x - this.nave.x) ? b : a));
     }
     this.bombas.push({ x: origen.x, y: origen.y + origen.h / 2, ...TAMANO.bomba });
@@ -183,7 +206,7 @@ export class Partida {
     this.cuadro = 1 - this.cuadro;
 
     const techoNave = this.nave.y - this.nave.h / 2;
-    if (this.invasores.some((i) => i.y + i.h / 2 >= techoNave)) this.#acabar('invasion');
+    if (this.invasores.some((i) => i.y + i.h / 2 >= techoNave)) this.#acabar(MOTIVO.INVASION);
   }
 
   #moverOvni(dt) {
@@ -194,11 +217,11 @@ export class Partida {
       return;
     }
     this.relojOvni -= dt;
-    if (this.relojOvni <= 0 && this.invasores.length > 6) {
+    if (this.relojOvni <= 0 && this.invasores.length > INVASORES_MINIMOS_OVNI) {
       const sentido = Math.random() < 0.5 ? 1 : -1;
       this.ovni = {
         x: sentido > 0 ? -TAMANO.ovni.w : MUNDO.ancho + TAMANO.ovni.w,
-        y: 26,
+        y: Y_OVNI,
         sentido,
         puntos: PREMIOS_OVNI[Math.floor(Math.random() * PREMIOS_OVNI.length)],
         ...TAMANO.ovni,
@@ -212,29 +235,30 @@ export class Partida {
   }
 
   #resolverColisiones() {
+    const gastados = new Set();
     for (const disparo of this.disparos) {
       const impactado = this.invasores.find((i) => solapan(disparo, i));
       if (impactado) {
         this.invasores = this.invasores.filter((i) => i !== impactado);
         this.puntos += impactado.puntos;
         this.#explosion(impactado.x, impactado.y, 0.3);
-        disparo.y = -100;
+        gastados.add(disparo);
       } else if (this.ovni && solapan(disparo, this.ovni)) {
         this.puntos += this.ovni.puntos;
         this.#explosion(this.ovni.x, this.ovni.y, 0.45);
         this.#retirarOvni();
-        disparo.y = -100;
+        gastados.add(disparo);
       }
     }
-    this.disparos = this.disparos.filter((d) => d.y > -d.h);
+    this.disparos = this.disparos.filter((d) => !gastados.has(d));
 
     if (this.invulnerable > 0) return;
     if (this.bombas.some((b) => solapan(b, this.nave))) {
       this.#explosion(this.nave.x, this.nave.y, 0.7);
       this.bombas = [];
       this.vidas -= 1;
-      if (this.vidas <= 0) this.#acabar('derrota');
-      else this.invulnerable = 2;
+      if (this.vidas <= 0) this.#acabar(MOTIVO.DERROTA);
+      else this.invulnerable = INVULNERABILIDAD;
     }
   }
 
