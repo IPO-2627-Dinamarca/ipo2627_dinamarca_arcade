@@ -1,4 +1,5 @@
 import { MUNDO } from '../model/entidades.js';
+import { ESTADO, MOTIVO } from '../model/partida.js';
 import { CELDA, MAPAS, crearSprite } from './sprites.js';
 
 const ESTRELLAS = 36;
@@ -71,7 +72,7 @@ export class Lienzo {
 
   #fondo(partida, ahora) {
     const { ctx, colores } = this;
-    const mueve = !this.sinMovimiento.matches && partida.estado !== 'pausado';
+    const mueve = !this.sinMovimiento.matches && partida.estado !== ESTADO.PAUSADO;
     ctx.fillStyle = colores.texto;
     for (const e of this.estrellas) {
       const y = mueve ? (e.y + (ahora / 1000) * e.velocidad) % MUNDO.alto : e.y;
@@ -92,7 +93,7 @@ export class Lienzo {
 
   #entidades(partida, ahora) {
     const { ctx, colores, sprites } = this;
-    if (partida.estado === 'parado') return;
+    if (partida.estado === ESTADO.PARADO) return;
 
     for (const i of partida.invasores) this.#sprite(sprites.invasor[i.tipo][partida.cuadro], i.x, i.y);
     if (partida.ovni) this.#sprite(sprites.ovni, partida.ovni.x, partida.ovni.y);
@@ -119,7 +120,7 @@ export class Lienzo {
   }
 
   #vidas(partida) {
-    if (partida.estado === 'parado') return;
+    if (partida.estado === ESTADO.PARADO) return;
     const y = MUNDO.alto - 12;
     for (let k = 0; k < partida.vidas; k++) this.#sprite(this.sprites.nave, 18 + k * 18, y, 1);
   }
@@ -143,18 +144,18 @@ export class Lienzo {
   #rotulos(partida) {
     const centro = MUNDO.alto / 2;
     switch (partida.estado) {
-      case 'parado':
+      case ESTADO.PARADO:
         this.#texto('MARCIANITOS', centro - 14, 26, this.colores.jugador);
         this.#texto('Pulsa Intro para jugar', centro + 22, 12);
         break;
-      case 'pausado':
+      case ESTADO.PAUSADO:
         this.#velo();
         this.#texto('PAUSA', centro - 8, 26);
         this.#texto('P para seguir', centro + 24, 12);
         break;
-      case 'fin':
+      case ESTADO.FIN:
         this.#velo();
-        this.#texto(partida.motivo === 'abandono' ? 'PARTIDA TERMINADA' : 'FIN DEL JUEGO', centro - 18, 22, this.colores.invasor);
+        this.#texto(partida.motivo === MOTIVO.ABANDONO ? 'PARTIDA TERMINADA' : 'FIN DEL JUEGO', centro - 18, 22, this.colores.invasor);
         this.#texto(`${partida.puntos} puntos`, centro + 14, 14);
         break;
       default:

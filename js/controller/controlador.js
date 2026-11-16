@@ -1,7 +1,8 @@
-import { Partida } from '../model/partida.js';
+import { Partida, ESTADO } from '../model/partida.js';
 import { guardarRecord, leerRecords } from '../model/almacen.js';
 
 const PASO_FIJO = 1 / 60;
+const DURACION_MAXIMA_FOTOGRAMA = 0.1;
 
 const TECLAS = {
   ArrowLeft: 'izquierda',
@@ -19,7 +20,6 @@ export class Controlador {
   #entrada = { izquierda: false, derecha: false, disparo: false };
   #ultimo = 0;
   #acumulado = 0;
-  #nivelAnunciado = 0;
 
   constructor(dificultades, vista) {
     this.#dificultades = dificultades;
@@ -34,36 +34,31 @@ export class Controlador {
     vista.alCambiarDificultad((id) => this.#cambiarDificultad(id));
     vista.alMandoTactil((tecla, activa) => (this.#entrada[tecla] = activa));
     vista.alCerrarAyuda(() => {
-      if (this.#partida.estado === 'pausado') vista.mostrarEstado('En pausa. Pulsa Reanudar para seguir.');
+      if (this.#partida.estado === ESTADO.PAUSADO) vista.mostrarPausa(true);
     });
+    vista.alTeclado(
+      (codigo) => this.#teclaAbajo(codigo),
+      (codigo) => this.#teclaArriba(codigo),
+    );
+    vista.alPerderFoco(() => this.#soltarTodo());
+    vista.alOcultarse(() => this.#pausarSiJuega());
 
-    document.addEventListener('keydown', (e) => this.#teclaAbajo(e));
-    document.addEventListener('keyup', (e) => this.#teclaArriba(e));
-    window.addEventListener('blur', () => this.#soltarTodo());
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) this.#pausarSiJuega();
-    });
-
-    vista.mostrarEstado('Pulsa Intro o Iniciar para empezar.');
+    vista.mostrarListo();
     this.#sincronizar();
     requestAnimationFrame((t) => this.#bucle(t));
   }
 
   #bucle(ahora) {
     requestAnimationFrame((t) => this.#bucle(t));
-    this.#acumulado += Math.min((ahora - this.#ultimo) / 1000, 0.1);
+    this.#acumulado += Math.min((ahora - this.#ultimo) / 1000, DURACION_MAXIMA_FOTOGRAMA);
     this.#ultimo = ahora;
 
-    const antes = this.#partida.estado;
+    const estadoPrevio = this.#partida.estado;
     while (this.#acumulado >= PASO_FIJO) {
       this.#partida.actualizar(PASO_FIJO, this.#entrada);
       this.#acumulado -= PASO_FIJO;
     }
-    if (antes === 'jugando' && this.#partida.estado === 'fin') this.#alTerminar();
-    if (this.#partida.nivel !== this.#nivelAnunciado) {
-      this.#nivelAnunciado = this.#partida.nivel;
-      if (this.#nivelAnunciado > 1) this.#vista.anunciar(`Nivel ${this.#nivelAnunciado}`);
-    }
+    if (estadoPrevio === ESTADO.JUGANDO && this.#partida.estado === ESTADO.FIN) this.#alTerminar();
 
     this.#sincronizar();
     this.#vista.pintar(this.#partida, ahora);
@@ -74,18 +69,17 @@ export class Controlador {
   }
 
   #accion(accion) {
-    const partida = this.#partida;
     switch (accion) {
       case 'iniciar':
         this.#empezar();
         break;
       case 'pausar':
-        partida.alternarPausa();
-        this.#anunciarPausa();
+        this.#partida.alternarPausa();
+        this.#mostrarPausa();
         this.#vista.enfocarJuego();
         break;
       case 'terminar':
-        partida.terminar();
+        this.#partida.terminar();
         this.#alTerminar();
         break;
       case 'ayuda':
@@ -96,79 +90,61 @@ export class Controlador {
   }
 
   #empezar() {
-    if (this.#partida.estado === 'jugando' || this.#partida.estado === 'pausado') return;
     this.#soltarTodo();
     this.#partida.empezar();
     this.#acumulado = 0;
     this.#ultimo = performance.now();
-    this.#nivelAnunciado = 0;
-    this.#vista.mostrarEstado('');
-    this.#vista.anunciar('Partida en marcha. Nivel 1.');
+    this.#vista.mostrarEnMarcha();
     this.#vista.enfocarJuego();
   }
 
   #pausarSiJuega() {
-    if (this.#partida.estado !== 'jugando') return;
+    if (this.#partida.estado !== ESTADO.JUGANDO) return;
     this.#partida.alternarPausa();
-    this.#anunciarPausa();
+    this.#mostrarPausa();
   }
 
-  #anunciarPausa() {
-    const enPausa = this.#partida.estado === 'pausado';
-    this.#vista.mostrarEstado(enPausa ? 'En pausa.' : '');
-    this.#vista.anunciar(enPausa ? 'Partida en pausa.' : 'Partida reanudada.');
+  #mostrarPausa() {
+    this.#vista.mostrarPausa(this.#partida.estado === ESTADO.PAUSADO);
   }
 
   #alTerminar() {
-    const { puntos, dificultad, motivo } = this.#partida;
+    const { puntos, dificultad } = this.#partida;
+    const nuevoRecord = puntos > (this.#records[dificultad.id] ?? 0);
+    if (nuevoRecord) this.#records = guardarRecord(dificultad.id, puntos);
     this.#soltarTodo();
-    let texto = motivo === 'invasion' ? 'Los marcianos han llegado a tierra.' : motivo === 'derrota' ? 'Te has quedado sin vidas.' : 'Partida terminada.';
-    texto += ` ${puntos} puntos.`;
-    if (puntos > (this.#records[dificultad.id] ?? 0)) {
-      this.#records = guardarRecord(dificultad.id, puntos);
-      texto += ' Nuevo récord.';
-    }
-    this.#vista.mostrarEstado(texto);
-    this.#vista.anunciar(texto);
+    this.#vista.mostrarResultado(this.#partida, nuevoRecord);
   }
 
   #cambiarDificultad(id) {
     const elegida = this.#dificultades.find((d) => d.id === id);
     if (!elegida) return;
     this.#partida = new Partida(elegida);
-    this.#nivelAnunciado = 0;
-    this.#vista.mostrarEstado('Pulsa Intro o Iniciar para empezar.');
+    this.#vista.mostrarListo();
   }
 
   #soltarTodo() {
     this.#entrada.izquierda = this.#entrada.derecha = this.#entrada.disparo = false;
   }
 
-  #teclaAbajo(e) {
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    // Los atajos no deben quitarle las teclas a un botón, al selector, a un enlace ni al diálogo.
-    if (e.target.closest('button, select, dialog, a')) return;
-
-    const direccion = TECLAS[e.code];
+  // Devuelve si la tecla se ha usado, para que la vista evite su acción por defecto.
+  #teclaAbajo(codigo) {
+    const direccion = TECLAS[codigo];
     if (direccion) {
-      e.preventDefault();
       this.#entrada[direccion] = true;
-      return;
+      return true;
     }
-    const estado = this.#partida.estado;
-    const activa = estado === 'jugando' || estado === 'pausado';
-    if (e.code === 'Enter' && !activa) {
-      e.preventDefault();
-      this.#empezar();
-    } else if (e.code === 'KeyP' && activa) {
-      this.#accion('pausar');
-    } else if (e.code === 'Escape' && activa) {
-      this.#accion('terminar');
-    }
+
+    const enCurso = this.#partida.enCurso;
+    if (codigo === 'Enter' && !enCurso) this.#empezar();
+    else if (codigo === 'KeyP' && enCurso) this.#accion('pausar');
+    else if (codigo === 'Escape' && enCurso) this.#accion('terminar');
+    else return false;
+    return true;
   }
 
-  #teclaArriba(e) {
-    const direccion = TECLAS[e.code];
+  #teclaArriba(codigo) {
+    const direccion = TECLAS[codigo];
     if (direccion) this.#entrada[direccion] = false;
   }
 }

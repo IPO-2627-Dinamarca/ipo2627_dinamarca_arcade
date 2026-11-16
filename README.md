@@ -117,9 +117,9 @@ ipo2627_dinamarca_arcade/
 
 Sigue el patrón MVC.
 
-- `Partida` (modelo) guarda todo el estado y las reglas y expone `empezar`, `alternarPausa`, `terminar` y `actualizar(dt, entrada)`. No toca el DOM ni el canvas.
-- `Vista` escribe los marcadores y los botones y avisa de lo que hace el usuario; `Lienzo` dibuja el estado de la partida. Los colores del canvas se leen de las variables CSS, así que hay una sola fuente de color.
-- `Controlador` es el único que habla con las dos: recoge el teclado, traduce los botones y lleva el bucle.
+- `Partida` (modelo) guarda todo el estado y las reglas y expone `empezar`, `alternarPausa`, `terminar` y `actualizar(dt, entrada)`. Los estados y los motivos de fin son constantes (`ESTADO`, `MOTIVO`). No toca el DOM ni el canvas.
+- `Vista` recoge los eventos del DOM (clics, teclado, foco y visibilidad) y escribe todos los textos: marcadores, botones, mensajes de estado y avisos para lectores de pantalla. `Lienzo` dibuja el estado de la partida. Los colores del canvas se leen de las variables CSS, así que hay una sola fuente de color.
+- `Controlador` es el único que habla con las dos: traduce eventos en acciones sobre el modelo, decide cuándo hay récord y lleva el bucle. No contiene textos ni toca el DOM.
 
 Los sprites son mapas de caracteres que se pintan una vez en un canvas pequeño y se escalan sin suavizado, para que los píxeles se vean nítidos a cualquier tamaño.
 

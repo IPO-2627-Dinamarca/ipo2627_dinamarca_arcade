@@ -1,6 +1,16 @@
+import { ESTADO, MOTIVO } from '../model/partida.js';
 import { Lienzo } from './lienzo.js';
 
-const ETIQUETA_INICIAR = { parado: 'Iniciar', fin: 'Jugar otra vez' };
+const ETIQUETA_INICIAR = { [ESTADO.PARADO]: 'Iniciar', [ESTADO.FIN]: 'Jugar otra vez' };
+
+const TEXTO_FIN = {
+  [MOTIVO.INVASION]: 'Los marcianos han llegado a tierra.',
+  [MOTIVO.DERROTA]: 'Te has quedado sin vidas.',
+  [MOTIVO.ABANDONO]: 'Partida terminada.',
+};
+
+// Controles que ya usan estas teclas: los atajos del juego no deben quitárselas.
+const CONTROLES_NATIVOS = 'button, select, dialog, a';
 
 export class Vista {
   constructor() {
@@ -17,6 +27,7 @@ export class Vista {
     this.selector = this.nodo('dificultad');
     this.ayuda = this.nodo('ayuda');
     this.cache = new Map();
+    this.nivelMostrado = 0;
   }
 
   alAccion(manejador) {
@@ -48,6 +59,25 @@ export class Vista {
     this.ayuda.addEventListener('close', manejador);
   }
 
+  alTeclado(alPulsar, alSoltar) {
+    document.addEventListener('keydown', (evento) => {
+      if (evento.ctrlKey || evento.metaKey || evento.altKey) return;
+      if (evento.target.closest(CONTROLES_NATIVOS)) return;
+      if (alPulsar(evento.code)) evento.preventDefault();
+    });
+    document.addEventListener('keyup', (evento) => alSoltar(evento.code));
+  }
+
+  alPerderFoco(manejador) {
+    window.addEventListener('blur', manejador);
+  }
+
+  alOcultarse(manejador) {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) manejador();
+    });
+  }
+
   abrirAyuda() {
     if (!this.ayuda.open) this.ayuda.showModal();
   }
@@ -76,11 +106,23 @@ export class Vista {
     );
   }
 
-  mostrarEstado(texto) {
-    this.#escribir('estado', texto);
+  mostrarListo() {
+    this.#escribir('estado', 'Pulsa Intro o Iniciar para empezar.');
   }
 
-  anunciar(texto) {
+  mostrarEnMarcha() {
+    this.#escribir('estado', '');
+    this.#escribir('anuncio', 'Partida en marcha. Nivel 1.');
+  }
+
+  mostrarPausa(enPausa) {
+    this.#escribir('estado', enPausa ? 'En pausa. Pulsa P o Reanudar para seguir.' : '');
+    this.#escribir('anuncio', enPausa ? 'Partida en pausa.' : 'Partida reanudada.');
+  }
+
+  mostrarResultado({ motivo, puntos }, nuevoRecord) {
+    const texto = `${TEXTO_FIN[motivo]} ${puntos} puntos.${nuevoRecord ? ' Nuevo récord.' : ''}`;
+    this.#escribir('estado', texto);
     this.#escribir('anuncio', texto);
   }
 
@@ -89,19 +131,25 @@ export class Vista {
     this.#escribir('puntos', partida.puntos);
     this.#escribir('record', record);
     this.#escribir('nivel', partida.nivel || '—');
-    this.#escribir('vidas', partida.estado === 'parado' ? '—' : partida.vidas);
+    this.#escribir('vidas', partida.estado === ESTADO.PARADO ? '—' : partida.vidas);
+    this.#anunciarNivel(partida.nivel);
 
-    const activa = partida.estado === 'jugando' || partida.estado === 'pausado';
+    const activa = partida.enCurso;
     this.botones.iniciar.disabled = activa;
     this.botones.iniciar.textContent = ETIQUETA_INICIAR[partida.estado] ?? 'Iniciar';
     this.botones.pausar.disabled = !activa;
-    this.botones.pausar.textContent = partida.estado === 'pausado' ? 'Reanudar' : 'Pausar';
+    this.botones.pausar.textContent = partida.estado === ESTADO.PAUSADO ? 'Reanudar' : 'Pausar';
     this.botones.terminar.disabled = !activa;
     this.selector.disabled = activa;
   }
 
   pintar(partida, ahora) {
     this.lienzo.pintar(partida, ahora);
+  }
+
+  #anunciarNivel(nivel) {
+    if (nivel > 1 && nivel !== this.nivelMostrado) this.#escribir('anuncio', `Nivel ${nivel}`);
+    this.nivelMostrado = nivel;
   }
 
   #escribir(nombre, valor) {
