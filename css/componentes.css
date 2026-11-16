@@ -1,4 +1,8 @@
 @layer componentes {
+  .cabecera {
+    text-align: center;
+  }
+
   .cabecera__titulo {
     font-size: clamp(var(--paso-3), 1.2rem + 3vw, var(--paso-5));
     font-weight: var(--peso-fuerte);
@@ -8,9 +12,10 @@
 
   .cabecera__lema {
     max-inline-size: 44ch;
+    margin-inline: auto;
     margin-block-start: var(--espacio-2);
     color: var(--tinta-suave);
-    text-wrap: pretty;
+    text-wrap: balance;
   }
 
   .pie {
