@@ -70,6 +70,7 @@ export class Partida {
     this.#moverProyectiles(dt);
     this.#moverFormacion(dt);
     this.#moverOvni(dt);
+    if (this.estado !== 'jugando') return;
     this.#resolverColisiones();
 
     if (this.estado === 'jugando' && this.invasores.length === 0) this.#siguienteNivel();
