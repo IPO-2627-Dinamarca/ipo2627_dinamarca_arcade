@@ -13,6 +13,8 @@ const TEXTO_FIN = {
 const CONTROLES_NATIVOS = 'button, select, dialog, a';
 
 export class Vista {
+  #nivelMostrado = 0;
+
   constructor() {
     this.raiz = document.querySelector('.app');
     this.nodo = (nombre) => this.raiz.querySelector(`[data-vista="${nombre}"]`);
@@ -27,7 +29,6 @@ export class Vista {
     this.selector = this.nodo('dificultad');
     this.ayuda = this.nodo('ayuda');
     this.cache = new Map();
-    this.nivelMostrado = 0;
   }
 
   alAccion(manejador) {
@@ -111,19 +112,18 @@ export class Vista {
   }
 
   mostrarEnMarcha() {
-    this.#escribir('estado', '');
-    this.#escribir('anuncio', 'Partida en marcha. Nivel 1.');
+    this.#decir('', 'Partida en marcha. Nivel 1.');
   }
 
   mostrarPausa(enPausa) {
-    this.#escribir('estado', enPausa ? 'En pausa. Pulsa P o Reanudar para seguir.' : '');
-    this.#escribir('anuncio', enPausa ? 'Partida en pausa.' : 'Partida reanudada.');
+    this.#decir(
+      enPausa ? 'En pausa. Pulsa P o Reanudar para seguir.' : '',
+      enPausa ? 'Partida en pausa.' : 'Partida reanudada.',
+    );
   }
 
   mostrarResultado({ motivo, puntos }, nuevoRecord) {
-    const texto = `${TEXTO_FIN[motivo]} ${puntos} puntos.${nuevoRecord ? ' Nuevo récord.' : ''}`;
-    this.#escribir('estado', texto);
-    this.#escribir('anuncio', texto);
+    this.#decir(`${TEXTO_FIN[motivo]} ${puntos} puntos.${nuevoRecord ? ' Nuevo récord.' : ''}`);
   }
 
   actualizar(partida, record) {
@@ -148,8 +148,14 @@ export class Vista {
   }
 
   #anunciarNivel(nivel) {
-    if (nivel > 1 && nivel !== this.nivelMostrado) this.#escribir('anuncio', `Nivel ${nivel}`);
-    this.nivelMostrado = nivel;
+    if (nivel > 1 && nivel !== this.#nivelMostrado) this.#escribir('anuncio', `Nivel ${nivel}`);
+    this.#nivelMostrado = nivel;
+  }
+
+  // Muestra un mensaje y lo anuncia a los lectores de pantalla; si no se da otro texto, anuncia el mismo.
+  #decir(estado, anuncio = estado) {
+    this.#escribir('estado', estado);
+    this.#escribir('anuncio', anuncio);
   }
 
   #escribir(nombre, valor) {
