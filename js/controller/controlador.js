@@ -74,8 +74,7 @@ export class Controlador {
         this.#empezar();
         break;
       case 'pausar':
-        this.#partida.alternarPausa();
-        this.#mostrarPausa();
+        this.#alternarPausa();
         this.#vista.enfocarJuego();
         break;
       case 'terminar':
@@ -99,12 +98,11 @@ export class Controlador {
   }
 
   #pausarSiJuega() {
-    if (this.#partida.estado !== ESTADO.JUGANDO) return;
-    this.#partida.alternarPausa();
-    this.#mostrarPausa();
+    if (this.#partida.estado === ESTADO.JUGANDO) this.#alternarPausa();
   }
 
-  #mostrarPausa() {
+  #alternarPausa() {
+    this.#partida.alternarPausa();
     this.#vista.mostrarPausa(this.#partida.estado === ESTADO.PAUSADO);
   }
 
